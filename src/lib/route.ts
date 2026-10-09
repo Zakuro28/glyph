@@ -8,12 +8,12 @@ export const GAMES: { id: Game; label: string }[] = [
   { id: 'mini', label: 'Mini' },
 ]
 
-/** The address is the state: #/link opens today's Link, #/link/4 opens Daily #4 from the archive */
-export type Route = { game: Game; day: number | null }
+/** The address is the state: no hash is the home page, #/link opens today's Link, #/link/4 opens Daily #4 from the archive */
+export type Route = { game: Game | 'home'; day: number | null }
 
 function parse(): Route {
   const [, g, d] = location.hash.split('/')
-  const game = GAMES.some((x) => x.id === g) ? (g as Game) : 'type'
+  const game = GAMES.some((x) => x.id === g) ? (g as Game) : 'home'
   const n = Number(d)
   return { game, day: d && Number.isInteger(n) && n >= 1 ? n - 1 : null }
 }

@@ -12,6 +12,7 @@ const TypeGame = lazy(() => import('./type/TypeGame'))
 const WordGame = lazy(() => import('./word/WordGame'))
 const LinkGame = lazy(() => import('./link/LinkGame'))
 const MiniGame = lazy(() => import('./mini/MiniGame'))
+const Home = lazy(() => import('./Home'))
 
 export default function App() {
   const route = useRoute()
@@ -24,7 +25,7 @@ export default function App() {
     <MotionConfig reducedMotion="user">
       <div className="mx-auto flex min-h-dvh max-w-5xl flex-col px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-8">
         <header className="flex h-14 items-center gap-3 sm:gap-4">
-          <a href="#/type" className="flex items-center gap-1 text-lg font-semibold tracking-tight" aria-label="Glyph home">
+          <a href="#/" className="flex items-center gap-1 text-lg font-semibold tracking-tight" aria-label="Glyph home">
             <span className="hidden sm:inline">glyph</span>
             <span className="grid size-7 place-items-center rounded-lg bg-panel font-mono text-sm ring-1 ring-line sm:hidden" aria-hidden>
               g
@@ -67,10 +68,11 @@ export default function App() {
         </header>
 
         <AccountModal open={accountOpen} onClose={() => setAccountOpen(false)} />
-        {online && <LeaderboardModal key={route.game} open={boardsOpen} onClose={() => setBoardsOpen(false)} game={route.game} today={dayNumber()} />}
+        {online && <LeaderboardModal key={route.game} open={boardsOpen} onClose={() => setBoardsOpen(false)} game={route.game === 'home' ? 'type' : route.game} today={dayNumber()} />}
 
         <main className="flex flex-1 flex-col" key={key}>
           <Suspense fallback={null}>
+            {route.game === 'home' && <Home />}
             {route.game === 'type' && <TypeGame />}
             {route.game === 'word' && <WordGame day={route.day} />}
             {route.game === 'link' && <LinkGame day={route.day} />}
