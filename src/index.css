@@ -1,0 +1,92 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-bg: #0e0f11;
+  --color-panel: #16181b;
+  --color-raise: #2b2f34;
+  --color-line: #2a2e33;
+  --color-text: #e8e6e3;
+  --color-sub: #6b7178;
+  --color-accent: #8be9c1;
+  --color-warn: #e9b949;
+  --color-bad: #ff6b6b;
+  /* Link groups, easiest to hardest */
+  --color-l0: #f0cf65;
+  --color-l1: #8be9c1;
+  --color-l2: #8fb4ff;
+  --color-l3: #c3a6ff;
+  --font-sans: 'Geist', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, monospace;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+html {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  -webkit-tap-highlight-color: transparent;
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background:
+    radial-gradient(60rem 30rem at 85% -10%, rgb(139 233 193 / 0.07), transparent 70%),
+    var(--color-bg);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: rgb(139 233 193 / 0.3);
+}
+
+/* Anything pressable gives a little under the finger */
+.press {
+  transition:
+    transform 160ms var(--ease-out),
+    background-color 200ms ease,
+    color 200ms ease,
+    opacity 200ms ease;
+}
+.press:active {
+  transform: scale(0.96);
+}
+
+/* Type: the caret glides between letters and blinks while you're idle */
+.caret {
+  transition: transform 90ms var(--ease-out);
+}
+.caret[data-idle='true'] {
+  animation: blink 1s steps(1) infinite;
+}
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+/* Word: a tile pops when a letter lands in it */
+.tile-pop {
+  animation: pop 120ms var(--ease-out);
+}
+@keyframes pop {
+  40% {
+    transform: scale(1.1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .caret,
+  .flipper {
+    transition-duration: 0ms !important;
+  }
+  .tile-pop,
+  .caret[data-idle='true'] {
+    animation: none;
+  }
+}
