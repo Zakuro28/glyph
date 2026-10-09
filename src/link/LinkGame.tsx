@@ -8,7 +8,11 @@ import StatsModal, { Countdown } from '../components/StatsModal'
 import { useToast } from '../components/Toast'
 import { LINKS } from '../data/links'
 import { keyIsElsewhere } from '../lib/keys'
-import { submitScore } from '../lib/online'
+import DailyBoard from '../components/DailyBoard'
+import TimerChip from '../components/TimerChip'
+import { online, submitDaily } from '../lib/online'
+import { useTimer } from '../lib/timer'
+import { clock } from '../mini/logic'
 import { bump, click, flip, lose, win } from '../lib/sound'
 import { emptyStats, liveCurrent, record, winRate } from '../lib/stats'
 import { dayNumber, useStored } from '../lib/storage'
@@ -40,6 +44,7 @@ export default function LinkGame({ day }: { day: number | null }) {
   const [busy, setBusy] = useState(false)
   const [statsOpen, setStatsOpen] = useState(false)
   const [archiveOpen, setArchiveOpen] = useState(false)
+  const [posted, setPosted] = useState(0)
   const [toast, show] = useToast()
   const board = useRef<HTMLDivElement>(null)
   const timers = useRef<number[]>([])
@@ -48,6 +53,11 @@ export default function LinkGame({ day }: { day: number | null }) {
   const puzzle = isDaily ? dailyPuzzle : LINKS[practice.index]
   const state: LinkState = isDaily ? dailyState : practice
   const status = statusOf(state)
+  // The clock starts with the first pick and stops when the game ends
+  const running = status === 'playing' && (state.guesses.length > 0 || selected.length > 0)
+  const [dailySecs] = useTimer(`link:time:d${dailyDay}`, isDaily && running)
+  const [practiceSecs, setPracticeSecs] = useTimer('link:time:practice', !isDaily && running)
+  const seconds = isDaily ? dailySecs : practiceSecs
   const stats = isDaily ? dailyStats : practiceStats
   const unsolved = puzzle.map((_, i) => i).filter((i) => !state.solved.includes(i))
   // After a loss the missing groups come in one at a time; a game opened already lost shows them all
@@ -79,7 +89,7 @@ export default function LinkGame({ day }: { day: number | null }) {
     if (!isDaily) setPracticeStats((s) => record(s, won, next.mistakes, null))
     else if (!isArchive) {
       setDailyStats((s) => record(s, won, next.mistakes, today))
-      if (won) submitScore('link', `daily-${today + 1}`, next.mistakes)
+      if (won) void submitDaily('link', today, seconds, next.mistakes).then(() => setPosted((n) => n + 1))
     }
     if (won) {
       win()
@@ -149,6 +159,7 @@ export default function LinkGame({ day }: { day: number | null }) {
   const newPuzzle = () => {
     const index = randomIndex(practice.index)
     setPractice({ index, ...fresh(LINKS[index]) })
+    setPracticeSecs(0)
     setSelected([])
     setRevealed(0)
     setStatsOpen(false)
@@ -169,11 +180,14 @@ export default function LinkGame({ day }: { day: number | null }) {
         onStats={() => setStatsOpen(true)}
         locked={busy}
         extra={
-          !isDaily && (
+          <>
+            <TimerChip seconds={seconds} done={status === 'won'} />
+            {!isDaily && (
             <button type="button" onClick={newPuzzle} disabled={busy} aria-label="New puzzle" className="press grid size-9 place-items-center rounded-full text-sub ring-1 ring-line hover:text-text">
               <RotateCcw className="size-4" />
             </button>
-          )
+            )}
+          </>
         }
       />
 
@@ -265,14 +279,15 @@ export default function LinkGame({ day }: { day: number | null }) {
       <StatsModal
         open={statsOpen}
         onClose={() => setStatsOpen(false)}
-        title={isDaily ? 'Link stats' : 'Practice stats'}
-        note={finished ? (won ? `${state.mistakes ? `Solved with ${MISS_LABELS[state.mistakes]}` : 'Solved perfectly'}${isArchive ? ' · archive puzzles don’t count toward stats' : ''}` : 'Out of mistakes this time') : undefined}
+        title={isDaily ? 'Connect4 stats' : 'Practice stats'}
+        note={finished ? (won ? `${state.mistakes ? `Solved with ${MISS_LABELS[state.mistakes]}` : 'Solved perfectly'} · ${clock(seconds)}${isArchive ? ' · archive puzzles don’t count toward stats' : ''}` : 'Out of mistakes this time') : undefined}
         numbers={[
           ['Played', stats.played],
           ['Win %', winRate(stats)],
           [isDaily ? 'Streak' : 'Win streak', liveCurrent(stats, today, isDaily)],
           ['Best', stats.best],
         ]}
+        board={online && isDaily && !isArchive ? <DailyBoard game="link" day={today} refresh={posted} /> : undefined}
         barsTitle="Mistakes when solved"
         bars={stats.dist.map((n, i) => ({ label: MISS_LABELS[i], n }))}
         highlight={won && finished && !isArchive ? state.mistakes : null}
@@ -288,10 +303,10 @@ export default function LinkGame({ day }: { day: number | null }) {
             {status !== 'playing' && (
               <ShareBar
                 text={shareText(puzzle, state, label)}
-                file={`glyph-link-${isDaily ? dailyDay + 1 : 'practice'}.png`}
+                file={`glyph-connect4-${isDaily ? dailyDay + 1 : 'practice'}.png`}
                 onDone={show}
                 card={() => ({
-                  mode: `link ${label}`,
+                  mode: `connect4 ${label}`,
                   headline: `${state.solved.length}/4`,
                   unit: won ? (state.mistakes ? 'solved' : 'perfect') : 'groups',
                   stats: [

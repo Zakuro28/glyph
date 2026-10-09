@@ -6,7 +6,6 @@ import { bumpStreak, useStored, type Streak } from '../lib/storage'
 import { consistency, makeWords, modeKey, tally, wpmOf, type Mode, type Result } from './engine'
 import Results from './Results'
 import { keyIsElsewhere } from '../lib/keys'
-import { submitScore } from '../lib/online'
 
 const TIMES = [15, 30, 60]
 const COUNTS = [10, 25, 50]
@@ -97,8 +96,6 @@ export default function TypeGame() {
     const prevBest = best[key] ?? 0
     if (Math.round(res.wpm) > prevBest) setBest((b) => ({ ...b, [key]: Math.round(res.wpm) }))
     setStreak((s) => bumpStreak(s))
-    // Only reasonable runs go on the leaderboard
-    if (res.acc >= 75 && res.wpm >= 1) submitScore('type', key, Math.round(res.wpm))
     setResult({ r: res, prevBest })
     setPhase('done')
     input.current?.blur()

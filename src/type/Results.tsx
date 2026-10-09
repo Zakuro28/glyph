@@ -103,7 +103,7 @@ export default function Results({ result: r, prevBest, streak, onNext }: { resul
           <RotateCcw className="size-4" aria-hidden /> Next test
         </button>
         <ShareBar
-          text={`glyph type · ${modeLabel(r.mode)}\n${wpm} wpm · ${Math.round(r.acc)}% accuracy`}
+          text={`glyph fastype · ${modeLabel(r.mode)}\n${wpm} wpm · ${Math.round(r.acc)}% accuracy`}
           file={`glyph-${wpm}wpm.png`}
           onDone={show}
           card={() => ({

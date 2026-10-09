@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { AnimatePresence, animate, motion, useReducedMotion } from 'motion/react'
-import { ChevronLeft, ChevronRight, LifeBuoy, RotateCcw, Timer } from 'lucide-react'
+import { ChevronLeft, ChevronRight, LifeBuoy, RotateCcw } from 'lucide-react'
 import Archive from '../components/Archive'
 import DailyBar from '../components/DailyBar'
 import ShareBar from '../components/ShareBar'
@@ -8,7 +8,9 @@ import StatsModal, { Countdown } from '../components/StatsModal'
 import { useToast } from '../components/Toast'
 import { MINIS } from '../data/minis'
 import { keyIsElsewhere } from '../lib/keys'
-import { submitScore } from '../lib/online'
+import DailyBoard from '../components/DailyBoard'
+import TimerChip from '../components/TimerChip'
+import { online, submitDaily } from '../lib/online'
 import { click, lose, win } from '../lib/sound'
 import { emptyStats, liveCurrent, record } from '../lib/stats'
 import { dayNumber, useStored } from '../lib/storage'
@@ -48,6 +50,7 @@ export default function MiniGame({ day }: { day: number | null }) {
   const [helpOpen, setHelpOpen] = useState(false)
   const [statsOpen, setStatsOpen] = useState(false)
   const [archiveOpen, setArchiveOpen] = useState(false)
+  const [posted, setPosted] = useState(0)
   const [toast, show] = useToast()
   const gridRef = useRef<HTMLDivElement>(null)
   const reduce = useReducedMotion()
@@ -83,7 +86,8 @@ export default function MiniGame({ day }: { day: number | null }) {
     else if (!isArchive) {
       setTimes(bump)
       setStreak((x) => record(x, true, 0, today))
-      if (!s.assisted) submitScore('mini', `daily-${today + 1}`, Math.max(5, s.seconds))
+      // Solves that used Check or Reveal don't go on the board
+      if (!s.assisted) void submitDaily('mini', today, s.seconds, null).then(() => setPosted((n) => n + 1))
     }
     // A ripple runs corner to corner
     if (!reduce)
@@ -248,9 +252,7 @@ export default function MiniGame({ day }: { day: number | null }) {
           onStats={() => setStatsOpen(true)}
           extra={
             <>
-              <span className={`flex items-center gap-1.5 px-1 font-mono text-sm tabular-nums ${st.done ? 'text-accent' : 'text-sub'}`} aria-label={`Time ${clock(st.seconds)}`}>
-                <Timer className="size-4" aria-hidden /> {clock(st.seconds)}
-              </span>
+              <TimerChip seconds={st.seconds} done={st.done} />
               {!isDaily && (
                 <button type="button" onClick={newPuzzle} aria-label="New puzzle" className="press grid size-9 place-items-center rounded-full text-sub ring-1 ring-line hover:text-text">
                   <RotateCcw className="size-4" />
@@ -399,7 +401,7 @@ export default function MiniGame({ day }: { day: number | null }) {
       <StatsModal
         open={statsOpen}
         onClose={() => setStatsOpen(false)}
-        title={isDaily ? 'Mini stats' : 'Practice stats'}
+        title={isDaily ? 'MiniCross stats' : 'Practice stats'}
         note={st.done ? `Solved in ${clock(st.seconds)}${st.assisted ? ' with help' : ''}${isArchive ? ' · archive puzzles don’t count toward stats' : ''}` : undefined}
         numbers={[
           ['Solved', t.count],
@@ -407,6 +409,7 @@ export default function MiniGame({ day }: { day: number | null }) {
           ['Best', t.best === null ? '–' : clock(t.best)],
           ['Average', avg === null ? '–' : clock(avg)],
         ]}
+        board={online && isDaily && !isArchive ? <DailyBoard game="mini" day={today} refresh={posted} /> : undefined}
         footer={
           <>
             {isDaily ? (
@@ -418,11 +421,11 @@ export default function MiniGame({ day }: { day: number | null }) {
             )}
             {st.done && (
               <ShareBar
-                text={`glyph mini ${label} · ${clock(st.seconds)}${st.assisted ? ' (with help)' : ''}`}
-                file={`glyph-mini-${isDaily ? dailyDay + 1 : 'practice'}.png`}
+                text={`glyph minicross ${label} · ${clock(st.seconds)}${st.assisted ? ' (with help)' : ''}`}
+                file={`glyph-minicross-${isDaily ? dailyDay + 1 : 'practice'}.png`}
                 onDone={show}
                 card={() => ({
-                  mode: `mini ${label}`,
+                  mode: `minicross ${label}`,
                   headline: clock(st.seconds),
                   unit: st.assisted ? 'with help' : 'time',
                   stats: [

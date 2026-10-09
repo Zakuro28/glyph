@@ -41,6 +41,6 @@ export function linkStatus(day: number): DayStatus {
 export const guessColors = (p: LinkPuzzle, guesses: string[][]) => guesses.map((g) => g.map((w) => LEVEL_HEX[p[groupOf(p, w)].level]))
 
 export const shareText = (p: LinkPuzzle, s: LinkState, label: string) =>
-  `glyph link ${label}\n\n` + s.guesses.map((g) => g.map((w) => EMOJI[p[groupOf(p, w)].level]).join('')).join('\n')
+  `glyph connect4 ${label}\n\n` + s.guesses.map((g) => g.map((w) => EMOJI[p[groupOf(p, w)].level]).join('')).join('\n')
 
 export const MISS_LABELS = ['Perfect', '1 miss', '2 misses', '3 misses']

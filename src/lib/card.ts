@@ -69,7 +69,7 @@ export async function renderCard(input: CardInput): Promise<Blob> {
 
   g.fillStyle = C.sub
   g.font = '500 20px Geist, sans-serif'
-  g.fillText('glyph · type, word, link and mini', 72, H - 52)
+  g.fillText('glyph · fastype, wordl, connect4 and minicross', 72, H - 52)
 
   return new Promise((resolve, reject) => canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('Could not draw the card'))), 'image/png'))
 }

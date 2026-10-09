@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react'
 
 export type Game = 'type' | 'word' | 'link' | 'mini'
 export const GAMES: { id: Game; label: string }[] = [
-  { id: 'type', label: 'Type' },
-  { id: 'word', label: 'Word' },
-  { id: 'link', label: 'Link' },
-  { id: 'mini', label: 'Mini' },
+  { id: 'type', label: 'Fastype' },
+  { id: 'word', label: 'Wordl' },
+  { id: 'link', label: 'Connect4' },
+  { id: 'mini', label: 'MiniCross' },
 ]
 
 /** The address is the state: no hash is the home page, #/link opens today's Link, #/link/4 opens Daily #4 from the archive */

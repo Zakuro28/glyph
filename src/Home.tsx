@@ -13,10 +13,10 @@ const EASE = [0.23, 1, 0.32, 1] as const
 type Card = { id: Game; name: string; blurb: string; icon: LucideIcon; tint: string }
 
 const CARDS: Card[] = [
-  { id: 'type', name: 'Type', blurb: 'How fast can you type? Race the clock and beat your best.', icon: Keyboard, tint: 'bg-accent/15 text-accent' },
-  { id: 'word', name: 'Word', blurb: 'Guess the five-letter word in six tries.', icon: LetterText, tint: 'bg-warn/15 text-warn' },
-  { id: 'link', name: 'Link', blurb: 'Sort sixteen words into four hidden groups.', icon: Link2, tint: 'bg-l2/15 text-l2' },
-  { id: 'mini', name: 'Mini', blurb: 'A pocket crossword you can finish over coffee.', icon: Grid3x3, tint: 'bg-l3/15 text-l3' },
+  { id: 'type', name: 'Fastype', blurb: 'How fast can you type? Race the clock and beat your best.', icon: Keyboard, tint: 'bg-accent/15 text-accent' },
+  { id: 'word', name: 'Wordl', blurb: 'Guess the five-letter word in six tries.', icon: LetterText, tint: 'bg-warn/15 text-warn' },
+  { id: 'link', name: 'Connect4', blurb: 'Sort sixteen words into four hidden groups.', icon: Link2, tint: 'bg-l2/15 text-l2' },
+  { id: 'mini', name: 'MiniCross', blurb: 'A pocket crossword you can finish over coffee.', icon: Grid3x3, tint: 'bg-l3/15 text-l3' },
 ]
 
 const fmt = new Intl.DateTimeFormat(undefined, { weekday: 'long', month: 'long', day: 'numeric' })

@@ -38,7 +38,7 @@ export const loadValid = () => import('../data/guesses.txt?raw').then((m) => new
 export const PRAISE = ['Genius', 'Magnificent', 'Impressive', 'Splendid', 'Great', 'Phew']
 
 export const shareText = (guesses: string[], answer: string, label: string, won: boolean) =>
-  `glyph word ${label} ${won ? guesses.length : 'X'}/6\n\n` +
+  `glyph wordl ${label} ${won ? guesses.length : 'X'}/6\n\n` +
   guesses.map((g) => score(g, answer).map((m) => (m === 'correct' ? '🟩' : m === 'present' ? '🟨' : '⬛')).join('')).join('\n')
 
 

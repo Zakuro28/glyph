@@ -12,7 +12,11 @@ import { emptyStats, liveCurrent, record, winRate } from '../lib/stats'
 import { dayNumber, useStored } from '../lib/storage'
 import Keyboard from './Keyboard'
 import { keyIsElsewhere } from '../lib/keys'
-import { submitScore } from '../lib/online'
+import DailyBoard from '../components/DailyBoard'
+import TimerChip from '../components/TimerChip'
+import { online, submitDaily } from '../lib/online'
+import { useTimer } from '../lib/timer'
+import { clock } from '../mini/logic'
 import { PRAISE, dailyAnswer, loadValid, randomAnswer, score, shareText, wordStatus, type Mark } from './logic'
 
 const FLIP = 500
@@ -52,6 +56,7 @@ export default function WordGame({ day }: { day: number | null }) {
   const [animRow, setAnimRow] = useState<number | null>(null)
   const [statsOpen, setStatsOpen] = useState(false)
   const [archiveOpen, setArchiveOpen] = useState(false)
+  const [posted, setPosted] = useState(0)
   const [toast, show] = useToast()
   const rows = useRef<(HTMLDivElement | null)[]>([])
   const timers = useRef<number[]>([])
@@ -63,6 +68,11 @@ export default function WordGame({ day }: { day: number | null }) {
   const won = guesses.at(-1) === answer
   const status = won ? 'won' : guesses.length >= 6 ? 'lost' : 'playing'
   const stats = isDaily ? dailyStats : practiceStats
+  // The clock starts with the first letter and stops when the game ends
+  const running = status === 'playing' && (guesses.length > 0 || current.length > 0)
+  const [dailySecs] = useTimer(`word:time:d${dailyDay}`, isDaily && running)
+  const [practiceSecs, setPracticeSecs] = useTimer('word:time:practice', !isDaily && running)
+  const seconds = isDaily ? dailySecs : practiceSecs
   // Rows still turning over don't color the keyboard yet
   const settled = animRow === null ? guesses : guesses.slice(0, animRow)
 
@@ -95,7 +105,7 @@ export default function WordGame({ day }: { day: number | null }) {
       if (!isDaily) setPracticeStats((s) => record(s, solved, next.length - 1, null))
       else if (!isArchive) {
         setDailyStats((s) => record(s, solved, next.length - 1, today))
-        if (solved) submitScore('word', `daily-${today + 1}`, next.length)
+        if (solved) void submitDaily('word', today, seconds, next.length).then(() => setPosted((n) => n + 1))
       }
     }
     if (!reduce) for (let i = 0; i < 5; i++) later(() => flip(i), i * STAGGER + FLIP / 2)
@@ -152,6 +162,7 @@ export default function WordGame({ day }: { day: number | null }) {
 
   const newWord = () => {
     setPractice((p) => ({ answer: randomAnswer(p.answer), guesses: [] }))
+    setPracticeSecs(0)
     setCurrent('')
     setStatsOpen(false)
   }
@@ -178,11 +189,14 @@ export default function WordGame({ day }: { day: number | null }) {
         onStats={() => setStatsOpen(true)}
         locked={animRow !== null}
         extra={
-          !isDaily && (
+          <>
+            <TimerChip seconds={seconds} done={status === 'won'} />
+            {!isDaily && (
             <button type="button" onClick={newWord} disabled={animRow !== null} aria-label="New word" className="press grid size-9 place-items-center rounded-full text-sub ring-1 ring-line hover:text-text">
               <RotateCcw className="size-4" />
             </button>
-          )
+            )}
+          </>
         }
       />
 
@@ -220,14 +234,15 @@ export default function WordGame({ day }: { day: number | null }) {
       <StatsModal
         open={statsOpen}
         onClose={() => setStatsOpen(false)}
-        title={isDaily ? 'Word stats' : 'Practice stats'}
-        note={finished ? (won ? `Solved in ${guesses.length}${isArchive ? ' · archive puzzles don’t count toward stats' : ''}` : <>The word was <span className="font-mono font-semibold text-text uppercase">{answer}</span></>) : undefined}
+        title={isDaily ? 'Wordl stats' : 'Practice stats'}
+        note={finished ? (won ? `Solved in ${guesses.length} guesses · ${clock(seconds)}${isArchive ? ' · archive puzzles don’t count toward stats' : ''}` : <>The word was <span className="font-mono font-semibold text-text uppercase">{answer}</span></>) : undefined}
         numbers={[
           ['Played', stats.played],
           ['Win %', winRate(stats)],
           [isDaily ? 'Streak' : 'Win streak', liveCurrent(stats, today, isDaily)],
           ['Best', stats.best],
         ]}
+        board={online && isDaily && !isArchive ? <DailyBoard game="word" day={today} refresh={posted} /> : undefined}
         barsTitle="Guess distribution"
         bars={stats.dist.map((n, i) => ({ label: String(i + 1), n }))}
         highlight={won && finished && !isArchive ? guesses.length - 1 : null}
@@ -243,10 +258,10 @@ export default function WordGame({ day }: { day: number | null }) {
             {status !== 'playing' && (
               <ShareBar
                 text={shareText(guesses, answer, label, won)}
-                file={`glyph-word-${isDaily ? dailyDay + 1 : 'practice'}.png`}
+                file={`glyph-wordl-${isDaily ? dailyDay + 1 : 'practice'}.png`}
                 onDone={show}
                 card={() => ({
-                  mode: `word ${label}`,
+                  mode: `wordl ${label}`,
                   headline: won ? `${guesses.length}/6` : 'X/6',
                   unit: won ? 'solved' : 'unsolved',
                   stats: [

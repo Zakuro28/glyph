@@ -28,7 +28,7 @@ export function Countdown() {
 export type Bar = { label: string; n: number }
 
 /** Stats for a game: four headline numbers, an optional bar chart, then whatever actions fit (share, next puzzle) */
-export default function StatsModal({ open, onClose, title, note, numbers, barsTitle, bars, highlight, footer }: { open: boolean; onClose: () => void; title: string; note?: ReactNode; numbers: [string, string | number][]; barsTitle?: string; bars?: Bar[]; highlight?: number | null; footer?: ReactNode }) {
+export default function StatsModal({ open, onClose, title, note, numbers, barsTitle, bars, highlight, board, footer }: { open: boolean; onClose: () => void; title: string; note?: ReactNode; numbers: [string, string | number][]; barsTitle?: string; bars?: Bar[]; highlight?: number | null; board?: ReactNode; footer?: ReactNode }) {
   const most = Math.max(...(bars ?? []).map((b) => b.n), 1)
   return (
     <Modal open={open} onClose={onClose} title={title}>
@@ -63,6 +63,13 @@ export default function StatsModal({ open, onClose, title, note, numbers, barsTi
               </li>
             ))}
           </ol>
+        </>
+      )}
+
+      {board && (
+        <>
+          <h3 className="mt-7 text-sm font-semibold text-sub">Today’s leaderboard</h3>
+          <div className="mt-3">{board}</div>
         </>
       )}
 

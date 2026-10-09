@@ -1,7 +1,6 @@
 import { useCallback, useState } from 'react'
 
-// Everything is kept in this browser (and synced to an account when signed in). Storage can be blocked
-// (private mode), so every call is guarded.
+// Everything is kept in this browser. Storage can be blocked (private mode), so every call is guarded.
 export function load<T>(key: string, fallback: T): T {
   try {
     const v = localStorage.getItem(`glyph:${key}`)
@@ -11,39 +10,11 @@ export function load<T>(key: string, fallback: T): T {
   }
 }
 
-const saveListeners = new Set<(key: string, value: unknown) => void>()
-/** Lets account sync hear about every save */
-export const onSave = (fn: (key: string, value: unknown) => void) => void saveListeners.add(fn)
-
 export function save(key: string, value: unknown) {
   try {
     localStorage.setItem(`glyph:${key}`, JSON.stringify(value))
   } catch {
     // Storage unavailable: the game still works, it just won't remember
-  }
-  saveListeners.forEach((fn) => fn(key, value))
-}
-
-/** Every key Glyph has saved on this device */
-export function storedKeys() {
-  try {
-    return Object.keys(localStorage)
-      .filter((k) => k.startsWith('glyph:'))
-      .map((k) => k.slice(6))
-  } catch {
-    return []
-  }
-}
-
-/** Writes a value that came from the account, without sending it back up. Returns whether anything changed. */
-export function writeRaw(key: string, value: unknown) {
-  try {
-    const next = JSON.stringify(value)
-    if (localStorage.getItem(`glyph:${key}`) === next) return false
-    localStorage.setItem(`glyph:${key}`, next)
-    return true
-  } catch {
-    return false
   }
 }
 
